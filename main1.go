@@ -2,6 +2,7 @@ package main
 
 import (
 	"code/Endpoint"
+	"code/Middleware"
 	"code/Service"
 	"code/Transport"
 	httptranport "github.com/go-kit/kit/transport/http"
@@ -11,8 +12,11 @@ import (
 
 func main()  {
 
-	user := Service.UserService{}
-	endp := Endpoint.GetUserEndpoint(&user)
+	var svc Service.IUserService
+	svc = &Service.UserService{}
+
+	svc = Middleware.LoggingMiddleware()(svc)
+	endp := Endpoint.GetUserEndpoint(svc)
 	serverHander := httptranport.NewServer(endp, Transport.DecodeUserRequest, Transport.EncodeUserReponse)
 	r := mux.NewRouter()
 	r.Handle(`/user/{uid:\d+}`, serverHander)
